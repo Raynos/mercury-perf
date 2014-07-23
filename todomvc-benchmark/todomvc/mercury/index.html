@@ -151,7 +151,7 @@ function render(state) {
             href: "https://rawgithub.com/raynos/mercury/master/examples/todomvc/style.css"
         }),
         h("section#todoapp.todoapp", [
-            mercury.partial(header, state.todoField, state.events),
+            mercury.partial(header, state.field, state.events),
             mainSection(state.todos, state.route, state.events),
             mercury.partial(statsSection, state.todos, state.route, state.events)
         ]),
@@ -159,7 +159,7 @@ function render(state) {
     ])
 }
 
-function header(todoField, events) {
+function header(field, events) {
     return h("header#header.header", {
         "data-event": [
             mercury.changeEvent(events.setTodoField),
@@ -170,7 +170,7 @@ function header(todoField, events) {
         h("input#new-todo.new-todo", {
             placeholder: "What needs to be done?",
             autofocus: true,
-            value: todoField,
+            value: field.text,
             name: "newTodo"
         })
     ])
@@ -287,7 +287,9 @@ var mercury = require("../../index.js")
 var TodoApp = {
     todos: [],
     route: "all",
-    todoField: ""
+    field: {
+        text: ""
+    }
 }
 
 var TodoItem = {
@@ -308,7 +310,9 @@ function todoApp(events, initialState) {
     return mercury.hash({
         todos: mercury.array(state.todos.map(todoItem)),
         route: mercury.value(state.route),
-        todoField: mercury.value(state.todoField),
+        field: mercury.hash({
+            text :mercury.value(state.field.text)
+        }),
         events: events
     })
 }
@@ -351,15 +355,19 @@ function toggleAll(state, value) {
 }
 
 function add(state, data) {
+    if (data.newTodo.trim() === "") {
+        return
+    }
+
     state.todos.push(State.todoItem({
         title: data.newTodo.trim()
     }))
-    state.todoField.set("")
+    state.field.text.set("")
 }
 
 
 function setTodoField(state, data) {
-    state.todoField.set(data.newTodo)
+    state.field.text.set(data.newTodo)
 }
 
 function toggle(state, data) {
@@ -3697,7 +3705,7 @@ function handleEvent(ev) {
         (ev.type === 'click' && target.tagName === 'BUTTON') ||
         (
             (target.type === 'text' || target.tagName === 'TEXTAREA') &&
-            (ev.keyCode === ENTER && !ev.shiftKey && ev.type === 'input')
+            (ev.keyCode === ENTER && !ev.shiftKey && ev.type === 'keydown')
         )
 
     if (!isValid) {
